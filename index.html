@@ -255,6 +255,12 @@
       height: 1.25rem !important;
       margin-top: 0.15rem !important;
     }
+    .is-landscape #cuben-hud {
+      top: 3.25rem !important;
+      right: 0.75rem !important;
+      max-width: 13rem !important;
+      padding: 0.4rem !important;
+    }
 
     /* Interactive 3D Cube Scene & Box */
     .cube-3d-scene {
@@ -375,6 +381,15 @@
         <span class="text-xs">15s Insp</span>
       </button>
 
+      <!-- CubeSense (Camera Cube Detection) Toggle -->
+      <button id="btn-cuben-cam" type="button" class="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl bg-oled-card border border-oled-border text-xs font-medium text-slate-300 hover:text-white active:scale-95 transition-all" title="CubeSense — Touchless Camera Cube Detection">
+        <span id="cuben-cam-dot" class="w-2 h-2 rounded-full bg-slate-600 transition-colors"></span>
+        <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+        <span class="text-xs font-semibold">CubeCam</span>
+      </button>
+
       <!-- Screen Orientation Toggle -->
       <button id="btn-orientation" type="button" class="flex-1 sm:flex-initial flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-xl bg-oled-card border border-oled-border text-xs font-medium text-slate-300 active:scale-95 transition-all" title="Toggle Orientation (Landscape / Portrait / Auto)">
         <svg id="icon-orient-auto" class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -427,6 +442,89 @@
       </div>
     </div>
   </header>
+
+  <!-- ==================== CUBESENSE FLOATING CAMERA HUD ==================== -->
+  <div id="cuben-hud" class="hidden absolute top-20 right-3 sm:right-6 z-40 bg-oled-card/95 backdrop-blur-md border border-oled-border rounded-2xl p-2.5 shadow-2xl transition-all duration-200 select-none w-52 sm:w-56">
+    <!-- Header -->
+    <div class="flex items-center justify-between gap-1 mb-2">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span id="cuben-status-badge" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+        <span class="text-[11px] font-bold text-white tracking-wide truncate">CubeSense</span>
+        <span id="cuben-mode-tag" class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">Desk</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <button id="btn-cuben-minimize" type="button" class="p-1 rounded-lg hover:bg-oled-elevated text-slate-400 hover:text-white transition-colors" title="Minimize Preview">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <button id="btn-cuben-close" type="button" class="p-1 rounded-lg hover:bg-oled-elevated text-slate-400 hover:text-rose-400 transition-colors" title="Turn Off CubeSense">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body (Collapsible) -->
+    <div id="cuben-hud-body" class="space-y-2">
+      <!-- Video Viewport -->
+      <div id="cuben-preview-box" class="relative rounded-xl overflow-hidden bg-black aspect-[4/3] w-full border-2 border-slate-700 transition-all duration-150">
+        <video id="cuben-video" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
+        
+        <!-- Reticle Overlay for Desk Cam -->
+        <div id="cuben-reticle" class="absolute inset-3 border-2 border-dashed border-sky-400/80 rounded-lg pointer-events-none flex items-center justify-center transition-all duration-150">
+          <div id="cuben-reticle-center" class="w-1.5 h-1.5 rounded-full bg-sky-400/60"></div>
+        </div>
+
+        <!-- Cover Lens Graphic (shown in cover mode) -->
+        <div id="cuben-cover-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center pointer-events-none text-center p-2">
+          <svg class="w-6 h-6 text-sky-400 mb-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <rect x="5" y="2" width="14" height="20" rx="3"/>
+            <circle cx="12" cy="5" r="1.5"/>
+          </svg>
+          <span class="text-[10px] font-bold text-white">Cover Front Lens</span>
+          <span class="text-[8px] text-slate-300">Place cube over camera</span>
+        </div>
+
+        <!-- Live Status Pill on Video -->
+        <div class="absolute bottom-1.5 inset-x-1 flex justify-center pointer-events-none">
+          <span id="cuben-hint-pill" class="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-sm text-slate-200 border border-white/10 shadow text-center truncate max-w-full">
+            Watching for Cube
+          </span>
+        </div>
+      </div>
+
+      <!-- Mode Selector Tabs -->
+      <div class="grid grid-cols-2 gap-1">
+        <button id="btn-cuben-mode-desk" type="button" class="py-1 px-1 rounded-lg text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/40 text-center transition-all">
+          🖥️ Desk Cam
+        </button>
+        <button id="btn-cuben-mode-cover" type="button" class="py-1 px-1 rounded-lg text-[10px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all">
+          📱 Cover Lens
+        </button>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex items-center justify-between gap-1 pt-1 border-t border-oled-border/60">
+        <button id="btn-cuben-calibrate" type="button" class="flex-1 py-1 px-1.5 rounded-lg bg-oled-elevated hover:bg-slate-800 text-[10px] font-mono text-slate-300 border border-oled-border active:scale-95 text-center flex items-center justify-center gap-1 transition-all" title="Calibrate empty desk background">
+          <svg class="w-3 h-3 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Calibrate</span>
+        </button>
+        <button id="btn-cuben-flip" type="button" class="py-1 px-2 rounded-lg bg-oled-elevated hover:bg-slate-800 text-[10px] font-mono text-slate-300 border border-oled-border active:scale-95 flex items-center gap-1 transition-all" title="Flip Front / Rear Camera">
+          <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span>Flip</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Minimized Bar (Visible when minimized) -->
+    <div id="cuben-minimized-bar" class="hidden flex items-center justify-between gap-2 py-0.5">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="cuben-mini-status" class="text-[10px] font-mono text-emerald-400 font-bold truncate">CubeCam Active</span>
+      </div>
+      <button id="btn-cuben-expand" type="button" class="p-1 rounded-lg hover:bg-oled-elevated text-slate-400 hover:text-white" title="Expand Camera Preview">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 15l-7 7-7-7"/></svg>
+      </button>
+    </div>
+  </div>
 
   <!-- ==================== CENTER TOUCH ZONE (TIMER) ==================== -->
   <main id="touch-zone" class="flex-1 w-full flex flex-col items-center justify-center relative glow-idle rounded-3xl my-2 cursor-pointer overflow-hidden">
@@ -1022,6 +1120,58 @@
           </div>
         </div>
 
+        <!-- Smart Camera Cube Detection (CubeSense) -->
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Smart Camera Cube Detection (CubeSense)</h3>
+          <div class="p-3.5 rounded-2xl bg-oled-elevated border border-oled-border space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-white">Enable Camera Detection</span>
+                <p class="text-[11px] text-slate-400">Touchless timer — detect cube presence via camera</p>
+              </div>
+              <button id="toggle-cubecam-settings" type="button" class="w-11 h-6 rounded-full bg-slate-700 relative transition-colors">
+                <span class="dot absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform"></span>
+              </button>
+            </div>
+
+            <!-- Detection Mode Selector -->
+            <div class="pt-2 border-t border-oled-border">
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">Detection Style:</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button id="btn-setting-cam-desk" type="button" class="p-2.5 rounded-xl border border-sky-500/40 bg-sky-500/10 text-left active:scale-95 transition-all">
+                  <div class="text-xs font-bold text-white flex items-center gap-1.5">🖥️ Desk Cam</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 leading-snug">Phone standing up. Detects cube resting on desk.</div>
+                </button>
+                <button id="btn-setting-cam-cover" type="button" class="p-2.5 rounded-xl border border-oled-border bg-oled-card text-left active:scale-95 transition-all">
+                  <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">📱 Flat Mat (Cover)</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 leading-snug">Phone flat on table. Place cube over front camera lens.</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sensitivity Selector -->
+            <div class="pt-2 border-t border-oled-border">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-[11px] font-semibold text-slate-300">Detection Sensitivity:</label>
+                <span id="cam-sens-label" class="text-[10px] font-mono text-sky-400">Normal</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button id="btn-sens-low" type="button" class="py-1 px-2 rounded-lg bg-oled-card border border-oled-border text-[10px] font-mono text-slate-400 hover:text-white transition-all text-center">Low</button>
+                <button id="btn-sens-normal" type="button" class="py-1 px-2 rounded-lg bg-sky-500/20 border border-sky-400/50 text-[10px] font-mono text-sky-300 font-bold transition-all text-center">Normal</button>
+                <button id="btn-sens-high" type="button" class="py-1 px-2 rounded-lg bg-oled-card border border-oled-border text-[10px] font-mono text-slate-400 hover:text-white transition-all text-center">High</button>
+              </div>
+            </div>
+
+            <!-- Visual Guide Box -->
+            <div class="p-2.5 rounded-xl bg-oled-card border border-oled-border text-[11px] text-slate-400 space-y-1">
+              <span class="text-xs font-semibold text-sky-400 block mb-0.5">How touchless solving works:</span>
+              <p>• <strong>1. Ready:</strong> Place cube in camera zone (or over lens). Turns green in 0.3s.</p>
+              <p>• <strong>2. Launch:</strong> Pick up cube — timer starts automatically!</p>
+              <p>• <strong>3. Stop:</strong> Drop cube back into zone (or over lens) — stops timer instantly!</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Orientation Selector Shortcut -->
         <div>
           <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Display Mode</h3>
@@ -1316,8 +1466,13 @@
           hapticsEnabled: true,
           cfopSplitsEnabled: false,
           orientation: 'auto',
-          previewMode: '2d'
+          previewMode: '2d',
+          cubeCamEnabled: false,
+          cubeCamMode: 'desk', // 'desk' | 'cover'
+          cubeCamFacing: 'user', // 'user' | 'environment'
+          cubeCamSensitivity: 'normal' // 'low' | 'normal' | 'high'
         },
+        cubeCamCooldownUntil: 0,
         currentScramble: '',
         // Timer State Machine: 'IDLE' | 'INSPECTING' | 'HOLDING' | 'READY' | 'RUNNING' | 'STOPPED_HOLD'
         timerState: 'IDLE',
@@ -1364,6 +1519,16 @@
               }
               if (['2d', '3d'].includes(parsed.settings.previewMode)) {
                 state.settings.previewMode = parsed.settings.previewMode;
+              }
+              state.settings.cubeCamEnabled = !!parsed.settings.cubeCamEnabled;
+              if (['desk', 'cover'].includes(parsed.settings.cubeCamMode)) {
+                state.settings.cubeCamMode = parsed.settings.cubeCamMode;
+              }
+              if (['user', 'environment'].includes(parsed.settings.cubeCamFacing)) {
+                state.settings.cubeCamFacing = parsed.settings.cubeCamFacing;
+              }
+              if (['low', 'normal', 'high'].includes(parsed.settings.cubeCamSensitivity)) {
+                state.settings.cubeCamSensitivity = parsed.settings.cubeCamSensitivity;
               }
             }
           }
@@ -1628,7 +1793,36 @@
         chipOll: document.getElementById('chip-oll'),
         chipPll: document.getElementById('chip-pll'),
         btnSplitPhase: document.getElementById('btn-split-phase'),
-        cfopCurrentTarget: document.getElementById('cfop-current-target')
+        cfopCurrentTarget: document.getElementById('cfop-current-target'),
+
+        // CubeSense (Smart Camera Cube Detection)
+        btnCubenCam: document.getElementById('btn-cuben-cam'),
+        cubenCamDot: document.getElementById('cuben-cam-dot'),
+        cubenHud: document.getElementById('cuben-hud'),
+        cubenHudBody: document.getElementById('cuben-hud-body'),
+        cubenMinimizedBar: document.getElementById('cuben-minimized-bar'),
+        cubenMiniStatus: document.getElementById('cuben-mini-status'),
+        cubenVideo: document.getElementById('cuben-video'),
+        cubenPreviewBox: document.getElementById('cuben-preview-box'),
+        cubenReticle: document.getElementById('cuben-reticle'),
+        cubenCoverOverlay: document.getElementById('cuben-cover-overlay'),
+        cubenHintPill: document.getElementById('cuben-hint-pill'),
+        cubenStatusBadge: document.getElementById('cuben-status-badge'),
+        cubenModeTag: document.getElementById('cuben-mode-tag'),
+        btnCubenModeDesk: document.getElementById('btn-cuben-mode-desk'),
+        btnCubenModeCover: document.getElementById('btn-cuben-mode-cover'),
+        btnCubenCalibrate: document.getElementById('btn-cuben-calibrate'),
+        btnCubenFlip: document.getElementById('btn-cuben-flip'),
+        btnCubenMinimize: document.getElementById('btn-cuben-minimize'),
+        btnCubenExpand: document.getElementById('btn-cuben-expand'),
+        btnCubenClose: document.getElementById('btn-cuben-close'),
+        toggleCubecamSettings: document.getElementById('toggle-cubecam-settings'),
+        btnSettingCamDesk: document.getElementById('btn-setting-cam-desk'),
+        btnSettingCamCover: document.getElementById('btn-setting-cam-cover'),
+        camSensLabel: document.getElementById('cam-sens-label'),
+        btnSensLow: document.getElementById('btn-sens-low'),
+        btnSensNormal: document.getElementById('btn-sens-normal'),
+        btnSensHigh: document.getElementById('btn-sens-high')
       };
 
       // Build the 54 DOM sticker nodes for 2D net and 3D cube
@@ -1795,6 +1989,35 @@
         setToggle(dom.toggleHaptics, state.settings.hapticsEnabled);
         setToggle(dom.toggleSoundSettings, state.settings.soundEnabled);
         setToggle(dom.toggleCfopSplits, state.settings.cfopSplitsEnabled);
+        setToggle(dom.toggleCubecamSettings, state.settings.cubeCamEnabled);
+
+        // CubeSense mode buttons in settings
+        const isDesk = state.settings.cubeCamMode === 'desk';
+        if (dom.btnSettingCamDesk && dom.btnSettingCamCover) {
+          if (isDesk) {
+            dom.btnSettingCamDesk.className = 'p-2.5 rounded-xl border border-sky-500/50 bg-sky-500/15 text-left active:scale-95 transition-all';
+            dom.btnSettingCamCover.className = 'p-2.5 rounded-xl border border-oled-border bg-oled-card text-left active:scale-95 transition-all';
+          } else {
+            dom.btnSettingCamCover.className = 'p-2.5 rounded-xl border border-sky-500/50 bg-sky-500/15 text-left active:scale-95 transition-all';
+            dom.btnSettingCamDesk.className = 'p-2.5 rounded-xl border border-oled-border bg-oled-card text-left active:scale-95 transition-all';
+          }
+        }
+
+        // Sensitivity buttons in settings
+        const sens = state.settings.cubeCamSensitivity || 'normal';
+        if (dom.camSensLabel) dom.camSensLabel.textContent = sens.charAt(0).toUpperCase() + sens.slice(1);
+        [
+          { el: dom.btnSensLow, key: 'low' },
+          { el: dom.btnSensNormal, key: 'normal' },
+          { el: dom.btnSensHigh, key: 'high' }
+        ].forEach(({ el, key }) => {
+          if (!el) return;
+          if (sens === key) {
+            el.className = 'py-1 px-2 rounded-lg bg-sky-500/20 border border-sky-400/50 text-[10px] font-mono text-sky-300 font-bold transition-all text-center';
+          } else {
+            el.className = 'py-1 px-2 rounded-lg bg-oled-card border border-oled-border text-[10px] font-mono text-slate-400 hover:text-white transition-all text-center';
+          }
+        });
 
         if (dom.settingsOrientBadge) {
           const m = state.settings.orientation;
@@ -1824,21 +2047,25 @@
        * ORIENTATION CONTROLS & RESPONSIVE LAYOUT ENGINE
        * ========================================================================= */
       let orientToastTimeout = null;
-      function showOrientToast(mode) {
+      function showToast(text, duration = 1800) {
         if (!dom.orientToast) return;
-        const labels = {
-          auto: 'Orientation: Auto-Rotate',
-          landscape: 'Orientation: Landscape (Stackmat)',
-          portrait: 'Orientation: Portrait'
-        };
         if (dom.orientToastText) {
-          dom.orientToastText.textContent = labels[mode] || mode;
+          dom.orientToastText.textContent = text;
         }
         dom.orientToast.classList.remove('opacity-0', 'pointer-events-none');
         clearTimeout(orientToastTimeout);
         orientToastTimeout = setTimeout(() => {
           dom.orientToast.classList.add('opacity-0', 'pointer-events-none');
-        }, 1600);
+        }, duration);
+      }
+
+      function showOrientToast(mode) {
+        const labels = {
+          auto: 'Orientation: Auto-Rotate',
+          landscape: 'Orientation: Landscape (Stackmat)',
+          portrait: 'Orientation: Portrait'
+        };
+        showToast(labels[mode] || mode);
       }
 
       function updateOrientationUI() {
@@ -1994,7 +2221,11 @@
           dom.timerMain.classList.add('text-slate-100');
           dom.padLeft.classList.add('border-slate-500');
           dom.padRight.classList.add('border-slate-500');
-          dom.statusPill.textContent = state.settings.inspectionEnabled ? 'Tap to Start 15s Inspection' : 'Hold 0.3s to Ready';
+          if (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) {
+            dom.statusPill.textContent = state.settings.inspectionEnabled ? 'CubeSense: Lift to Inspect' : (cubeCamEngine.mode === 'cover' ? 'CubeSense: Cover Camera to Ready' : 'CubeSense: Place Cube to Ready');
+          } else {
+            dom.statusPill.textContent = state.settings.inspectionEnabled ? 'Tap to Start 15s Inspection' : 'Hold 0.3s to Ready';
+          }
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-oled-card border border-oled-border text-slate-400';
           dom.topUi.classList.remove('opacity-15', 'pointer-events-none');
           dom.bottomUi.classList.remove('opacity-15', 'pointer-events-none');
@@ -2003,32 +2234,36 @@
           dom.timerMain.classList.add('text-amber-400');
           dom.padLeft.classList.add('border-amber-500/60');
           dom.padRight.classList.add('border-amber-500/60');
-          dom.statusPill.textContent = 'Hold 0.3s to Launch Solve';
+          dom.statusPill.textContent = (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) ? 'CubeSense: Place Cube to Ready' : 'Hold 0.3s to Launch Solve';
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300';
         } else if (mode === 'HOLDING') {
           dom.touchZone.classList.add('glow-holding');
           dom.timerMain.classList.add('text-rose-500');
           dom.padLeft.classList.add('border-rose-500', 'bg-rose-500/10');
           dom.padRight.classList.add('border-rose-500', 'bg-rose-500/10');
-          dom.statusPill.textContent = 'Keep Holding...';
+          dom.statusPill.textContent = (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) ? 'CubeSense: Resting... Hold' : 'Keep Holding...';
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-rose-950/70 border border-rose-500/50 text-rose-300';
         } else if (mode === 'READY') {
           dom.touchZone.classList.add('glow-ready');
           dom.timerMain.classList.add('text-emerald-400', 'animate-ready');
           dom.padLeft.classList.add('border-emerald-400', 'bg-emerald-500/20');
           dom.padRight.classList.add('border-emerald-400', 'bg-emerald-500/20');
-          dom.statusPill.textContent = 'Release to Start!';
+          dom.statusPill.textContent = (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) ? 'CubeSense: Lift Cube to Start!' : 'Release to Start!';
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400 text-emerald-300';
         } else if (mode === 'RUNNING') {
           dom.touchZone.classList.add('glow-idle');
           dom.timerMain.classList.add('text-slate-100');
-          dom.statusPill.textContent = 'Tap Anywhere to Stop';
+          dom.statusPill.textContent = (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) ? (cubeCamEngine.mode === 'cover' ? 'Cover Camera to Stop' : 'Drop Cube into Box to Stop') : 'Tap Anywhere to Stop';
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-oled-card border border-oled-border text-slate-500';
           // Dim distractions while solving
           dom.topUi.classList.add('opacity-15', 'pointer-events-none');
           dom.bottomUi.classList.add('opacity-15', 'pointer-events-none');
           dom.penaltyBar.classList.add('opacity-0', 'pointer-events-none');
           dom.feedbackBadge.classList.add('hidden');
+        }
+
+        if (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) {
+          cubeCamEngine.updateHudVisuals();
         }
       }
 
@@ -2322,6 +2557,479 @@
         if (dom.analyticsModal) { dom.analyticsModal.classList.add('hidden'); dom.analyticsModal.classList.remove('flex'); }
         if (dom.algsModal) { dom.algsModal.classList.add('hidden'); dom.algsModal.classList.remove('flex'); }
         if (dom.settingsModal) { dom.settingsModal.classList.add('hidden'); dom.settingsModal.classList.remove('flex'); }
+      }
+
+      /* =========================================================================
+       * CUBESENSE — SMART TOUCHLESS CAMERA CUBE DETECTION ENGINE
+       * ========================================================================= */
+      class CubeCamEngine {
+        constructor() {
+          this.active = false;
+          this.minimized = false;
+          this.stream = null;
+          this.animId = null;
+
+          this.mode = state.settings.cubeCamMode || 'desk'; // 'desk' | 'cover'
+          this.facingMode = state.settings.cubeCamFacing || 'user'; // 'user' | 'environment'
+          this.sensitivity = state.settings.cubeCamSensitivity || 'normal'; // 'low' | 'normal' | 'high'
+
+          // Offscreen downscaled canvas: 80x60 = 4800 pixels for ~0.1ms computation
+          this.canvas = document.createElement('canvas');
+          this.canvas.width = 80;
+          this.canvas.height = 60;
+          this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+
+          this.deskBaseline = null;
+          this.lastFrameTime = 0;
+          this.isCubePresent = false;
+          this.consecutiveTrue = 0;
+          this.consecutiveFalse = 0;
+          this.framesProcessed = 0;
+        }
+
+        async startCamera() {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast('Camera not supported in this browser');
+            return false;
+          }
+
+          try {
+            if (this.stream) {
+              this.stopCamera();
+            }
+
+            const constraints = {
+              video: {
+                facingMode: this.facingMode,
+                width: { ideal: 320 },
+                height: { ideal: 240 }
+              },
+              audio: false
+            };
+
+            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+            if (dom.cubenVideo) {
+              dom.cubenVideo.srcObject = this.stream;
+              if (this.facingMode === 'user') {
+                dom.cubenVideo.classList.add('transform', '-scale-x-100');
+              } else {
+                dom.cubenVideo.classList.remove('transform', '-scale-x-100');
+              }
+              await dom.cubenVideo.play().catch(() => {});
+            }
+
+            this.active = true;
+            this.deskBaseline = null;
+            this.framesProcessed = 0;
+            this.isCubePresent = false;
+            this.consecutiveTrue = 0;
+            this.consecutiveFalse = 0;
+
+            this.updateModeUI();
+            this.loop();
+            return true;
+          } catch (err) {
+            console.warn('Camera start error:', err);
+            return false;
+          }
+        }
+
+        stopCamera() {
+          this.active = false;
+          if (this.animId) {
+            cancelAnimationFrame(this.animId);
+            this.animId = null;
+          }
+          if (this.stream) {
+            this.stream.getTracks().forEach((t) => t.stop());
+            this.stream = null;
+          }
+          if (dom.cubenVideo) {
+            dom.cubenVideo.srcObject = null;
+          }
+          this.isCubePresent = false;
+          this.consecutiveTrue = 0;
+          this.consecutiveFalse = 0;
+        }
+
+        async toggleFacingMode() {
+          this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
+          state.settings.cubeCamFacing = this.facingMode;
+          saveStorage();
+          if (this.active) {
+            await this.startCamera();
+          }
+          showToast(`Camera switched to ${this.facingMode === 'user' ? 'Front' : 'Rear'}`);
+        }
+
+        setMode(newMode) {
+          if (newMode !== 'desk' && newMode !== 'cover') return;
+          this.mode = newMode;
+          state.settings.cubeCamMode = newMode;
+          saveStorage();
+          this.deskBaseline = null;
+          this.framesProcessed = 0;
+          this.updateModeUI();
+          this.updateHudVisuals();
+          updateSettingsUI();
+          if (state.timerState === 'IDLE') setVisualTheme('IDLE');
+          showToast(newMode === 'desk' ? 'Desk Cam: Place cube in view' : 'Cover Lens: Place cube over camera');
+        }
+
+        setSensitivity(level) {
+          if (!['low', 'normal', 'high'].includes(level)) return;
+          this.sensitivity = level;
+          state.settings.cubeCamSensitivity = level;
+          saveStorage();
+          updateSettingsUI();
+          showToast(`Sensitivity set to ${level.toUpperCase()}`);
+        }
+
+        calibrateDesk() {
+          if (!this.active || !dom.cubenVideo || dom.cubenVideo.readyState < 2) {
+            showToast('Start camera first to calibrate');
+            return;
+          }
+          this.ctx.drawImage(dom.cubenVideo, 0, 0, 80, 60);
+          const frame = this.ctx.getImageData(0, 0, 80, 60);
+          this.captureBaseline(frame.data, 80, 16, 64, 14, 48);
+          if (dom.cubenReticle) {
+            dom.cubenReticle.classList.add('border-emerald-400', 'scale-105');
+            setTimeout(() => {
+              if (dom.cubenReticle) dom.cubenReticle.classList.remove('scale-105');
+            }, 300);
+          }
+          showToast('✓ Desk Calibrated! Place cube to ready');
+        }
+
+        captureBaseline(data, w, zX1, zX2, zY1, zY2) {
+          const zoneW = zX2 - zX1;
+          const zoneH = zY2 - zY1;
+          this.deskBaseline = new Uint8Array(zoneW * zoneH * 3);
+          let pIdx = 0;
+          for (let y = zY1; y < zY2; y++) {
+            for (let x = zX1; x < zX2; x++) {
+              const i = (y * w + x) * 4;
+              this.deskBaseline[pIdx] = data[i];
+              this.deskBaseline[pIdx + 1] = data[i + 1];
+              this.deskBaseline[pIdx + 2] = data[i + 2];
+              pIdx += 3;
+            }
+          }
+        }
+
+        updateModeUI() {
+          const isDesk = this.mode === 'desk';
+          if (dom.cubenModeTag) dom.cubenModeTag.textContent = isDesk ? 'Desk' : 'Cover';
+          if (dom.cubenReticle) dom.cubenReticle.classList.toggle('hidden', !isDesk);
+          if (dom.cubenCoverOverlay) dom.cubenCoverOverlay.classList.toggle('hidden', isDesk);
+          if (dom.btnCubenCalibrate) dom.btnCubenCalibrate.classList.toggle('hidden', !isDesk);
+
+          if (dom.btnCubenModeDesk && dom.btnCubenModeCover) {
+            if (isDesk) {
+              dom.btnCubenModeDesk.className = 'py-1 px-1 rounded-lg text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/40 text-center transition-all';
+              dom.btnCubenModeCover.className = 'py-1 px-1 rounded-lg text-[10px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all';
+            } else {
+              dom.btnCubenModeCover.className = 'py-1 px-1 rounded-lg text-[10px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/40 text-center transition-all';
+              dom.btnCubenModeDesk.className = 'py-1 px-1 rounded-lg text-[10px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all';
+            }
+          }
+        }
+
+        loop() {
+          if (!this.active) return;
+          const now = performance.now();
+          this.processFrame(now);
+          this.animId = requestAnimationFrame(() => this.loop());
+        }
+
+        processFrame(now) {
+          if (!this.active || !dom.cubenVideo || dom.cubenVideo.readyState < 2) return;
+
+          // Rate-limit processing to 30 FPS (~33ms)
+          if (now - this.lastFrameTime < 30) return;
+          this.lastFrameTime = now;
+
+          const w = 80;
+          const h = 60;
+          this.ctx.drawImage(dom.cubenVideo, 0, 0, w, h);
+          const frame = this.ctx.getImageData(0, 0, w, h);
+          const data = frame.data;
+          this.framesProcessed++;
+
+          let detectedNow = false;
+          let metric = 0;
+
+          if (this.mode === 'cover') {
+            // COVER LENS: Calculate average luminance
+            let sumLum = 0;
+            const totalPixels = w * h;
+            for (let i = 0; i < data.length; i += 4) {
+              sumLum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+            }
+            const avgLum = sumLum / totalPixels;
+
+            let threshold = 34;
+            if (this.sensitivity === 'low') threshold = 22;
+            else if (this.sensitivity === 'high') threshold = 46;
+
+            detectedNow = avgLum < threshold;
+            metric = Math.round(avgLum);
+          } else {
+            // DESK CAM: Target zone x in [16..64], y in [14..48]
+            const zX1 = 16, zX2 = 64, zY1 = 14, zY2 = 48;
+            const zoneW = zX2 - zX1;
+            const zoneH = zY2 - zY1;
+            const zonePixels = zoneW * zoneH;
+
+            // Auto-capture baseline on startup after 15 frames (~500ms)
+            if (!this.deskBaseline && this.framesProcessed >= 15) {
+              this.captureBaseline(data, w, zX1, zX2, zY1, zY2);
+            }
+
+            if (this.deskBaseline) {
+              let diffCount = 0;
+              let pIdx = 0;
+              for (let y = zY1; y < zY2; y++) {
+                for (let x = zX1; x < zX2; x++) {
+                  const i = (y * w + x) * 4;
+                  const b = this.deskBaseline;
+                  const dr = Math.abs(data[i] - b[pIdx]);
+                  const dg = Math.abs(data[i + 1] - b[pIdx + 1]);
+                  const db = Math.abs(data[i + 2] - b[pIdx + 2]);
+                  if (dr + dg + db > 48) {
+                    diffCount++;
+                  }
+                  pIdx += 3;
+                }
+              }
+              const diffRatio = diffCount / zonePixels;
+              let threshold = 0.18;
+              if (this.sensitivity === 'low') threshold = 0.26;
+              else if (this.sensitivity === 'high') threshold = 0.12;
+
+              detectedNow = diffRatio >= threshold;
+              metric = Math.round(diffRatio * 100);
+            }
+          }
+
+          // Debounce: when running, trigger stop in 1 frame for ultra-fast reaction!
+          const requiredTrue = state.timerState === 'RUNNING' ? 1 : 2;
+          const requiredFalse = 2;
+
+          if (detectedNow) {
+            this.consecutiveTrue++;
+            this.consecutiveFalse = 0;
+          } else {
+            this.consecutiveFalse++;
+            this.consecutiveTrue = 0;
+          }
+
+          let newState = this.isCubePresent;
+          if (this.consecutiveTrue >= requiredTrue && !this.isCubePresent) {
+            newState = true;
+          } else if (this.consecutiveFalse >= requiredFalse && this.isCubePresent) {
+            newState = false;
+          }
+
+          if (newState !== this.isCubePresent) {
+            this.isCubePresent = newState;
+            this.updateHudVisuals(metric);
+            handleCubeCamPresenceChange(this.isCubePresent);
+          } else if (this.framesProcessed % 10 === 0) {
+            this.updateHudVisuals(metric);
+          }
+        }
+
+        updateHudVisuals(metric) {
+          if (!this.active) return;
+          const tState = state.timerState;
+          const isPresent = this.isCubePresent;
+
+          if (dom.cubenPreviewBox) {
+            dom.cubenPreviewBox.classList.remove(
+              'border-slate-700', 'border-rose-500', 'border-emerald-400', 'border-sky-400',
+              'shadow-[0_0_15px_rgba(244,63,94,0.4)]', 'shadow-[0_0_15px_rgba(52,211,153,0.5)]', 'shadow-[0_0_15px_rgba(56,189,248,0.4)]'
+            );
+          }
+          if (dom.cubenReticle) {
+            dom.cubenReticle.classList.remove('border-sky-400/80', 'border-rose-500', 'border-emerald-400', 'border-sky-400');
+          }
+
+          let hintText = '';
+          let badgeColor = 'bg-slate-500';
+
+          if (tState === 'RUNNING') {
+            if (dom.cubenPreviewBox) dom.cubenPreviewBox.classList.add('border-sky-400', 'shadow-[0_0_15px_rgba(56,189,248,0.4)]');
+            if (dom.cubenReticle) dom.cubenReticle.classList.add('border-sky-400');
+            hintText = this.mode === 'cover' ? '⚡ Cover to Stop' : '⚡ Drop Cube to Stop';
+            badgeColor = 'bg-sky-400';
+          } else if (tState === 'READY') {
+            if (dom.cubenPreviewBox) dom.cubenPreviewBox.classList.add('border-emerald-400', 'shadow-[0_0_15px_rgba(52,211,153,0.5)]');
+            if (dom.cubenReticle) dom.cubenReticle.classList.add('border-emerald-400');
+            hintText = '🟢 Ready! Lift Cube!';
+            badgeColor = 'bg-emerald-400';
+          } else if (tState === 'HOLDING') {
+            if (dom.cubenPreviewBox) dom.cubenPreviewBox.classList.add('border-rose-500', 'shadow-[0_0_15px_rgba(244,63,94,0.4)]');
+            if (dom.cubenReticle) dom.cubenReticle.classList.add('border-rose-500');
+            hintText = '🔴 Keep Holding...';
+            badgeColor = 'bg-rose-500';
+          } else {
+            // IDLE / INSPECTING / STOPPED_HOLD
+            if (isPresent) {
+              if (dom.cubenPreviewBox) dom.cubenPreviewBox.classList.add('border-rose-500');
+              if (dom.cubenReticle) dom.cubenReticle.classList.add('border-rose-500');
+              hintText = 'Cube Detected';
+              badgeColor = 'bg-rose-400';
+            } else {
+              if (dom.cubenPreviewBox) dom.cubenPreviewBox.classList.add('border-slate-700');
+              if (dom.cubenReticle) dom.cubenReticle.classList.add('border-sky-400/80');
+              hintText = this.mode === 'cover' ? 'Place Cube Over Lens' : 'Place Cube in Box';
+              badgeColor = 'bg-sky-400';
+            }
+          }
+
+          if (dom.cubenHintPill) dom.cubenHintPill.textContent = hintText;
+          if (dom.cubenStatusBadge) dom.cubenStatusBadge.className = `w-2 h-2 rounded-full ${badgeColor} animate-pulse shrink-0`;
+          if (dom.cubenMiniStatus) dom.cubenMiniStatus.textContent = hintText;
+        }
+      }
+
+      const cubeCamEngine = new CubeCamEngine();
+
+      function handleCubeCamPresenceChange(isCubePresent) {
+        if (isAnyModalOpen()) return;
+
+        const now = performance.now();
+        if (state.cubeCamCooldownUntil && now < state.cubeCamCooldownUntil) {
+          return;
+        }
+
+        // 1. If Timer is RUNNING:
+        if (state.timerState === 'RUNNING') {
+          if (isCubePresent) {
+            stopSolve();
+            state.timerState = 'STOPPED_HOLD';
+            state.cubeCamCooldownUntil = now + 750;
+            setTimeout(() => {
+              if (state.timerState === 'STOPPED_HOLD') {
+                state.timerState = 'IDLE';
+                setVisualTheme('IDLE');
+                updateDashboardStats();
+              }
+            }, 750);
+          }
+          return;
+        }
+
+        // 2. If in STOPPED_HOLD:
+        if (state.timerState === 'STOPPED_HOLD') {
+          if (!isCubePresent) {
+            state.timerState = 'IDLE';
+            setVisualTheme('IDLE');
+            updateDashboardStats();
+          }
+          return;
+        }
+
+        // 3. If in IDLE:
+        if (state.timerState === 'IDLE') {
+          if (isCubePresent) {
+            if (!state.settings.inspectionEnabled) {
+              beginHold();
+            } else {
+              dom.timerMain.classList.add('text-amber-300');
+            }
+          } else {
+            if (state.settings.inspectionEnabled) {
+              startInspection();
+            }
+          }
+          return;
+        }
+
+        // 4. If in INSPECTING:
+        if (state.timerState === 'INSPECTING') {
+          if (isCubePresent) {
+            beginHold();
+          }
+          return;
+        }
+
+        // 5. If in HOLDING:
+        if (state.timerState === 'HOLDING') {
+          if (!isCubePresent) {
+            cancelHold();
+          }
+          return;
+        }
+
+        // 6. If in READY:
+        if (state.timerState === 'READY') {
+          if (!isCubePresent) {
+            startSolve();
+          }
+          return;
+        }
+      }
+
+      async function toggleCubeCam() {
+        if (!cubeCamEngine) return;
+        if (cubeCamEngine.active) {
+          cubeCamEngine.stopCamera();
+          state.settings.cubeCamEnabled = false;
+          saveStorage();
+          updateCubeCamUI();
+          showToast('CubeSense Deactivated');
+        } else {
+          showToast('Starting camera...');
+          const ok = await cubeCamEngine.startCamera();
+          if (ok) {
+            state.settings.cubeCamEnabled = true;
+            saveStorage();
+            updateCubeCamUI();
+            showToast('CubeSense Active — Place cube to ready');
+          } else {
+            state.settings.cubeCamEnabled = false;
+            saveStorage();
+            updateCubeCamUI();
+            showToast('Camera permission required for CubeSense');
+          }
+        }
+      }
+
+      function updateCubeCamUI() {
+        const isCamActive = cubeCamEngine && cubeCamEngine.active;
+        if (dom.cubenCamDot) {
+          if (isCamActive) {
+            dom.cubenCamDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse';
+            if (dom.btnCubenCam) dom.btnCubenCam.classList.add('border-emerald-500/50', 'text-emerald-300');
+          } else {
+            dom.cubenCamDot.className = 'w-2 h-2 rounded-full bg-slate-600 transition-colors';
+            if (dom.btnCubenCam) dom.btnCubenCam.classList.remove('border-emerald-500/50', 'text-emerald-300');
+          }
+        }
+
+        if (dom.cubenHud) {
+          if (isCamActive) {
+            dom.cubenHud.classList.remove('hidden');
+          } else {
+            dom.cubenHud.classList.add('hidden');
+          }
+        }
+
+        if (dom.toggleCubecamSettings) {
+          const dot = dom.toggleCubecamSettings.querySelector('.dot');
+          if (state.settings.cubeCamEnabled) {
+            dom.toggleCubecamSettings.className = 'w-11 h-6 rounded-full bg-sky-500 relative transition-colors';
+            if (dot) dot.className = 'dot absolute left-6 top-1 w-4 h-4 rounded-full bg-white transition-transform';
+          } else {
+            dom.toggleCubecamSettings.className = 'w-11 h-6 rounded-full bg-slate-700 relative transition-colors';
+            if (dot) dot.className = 'dot absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform';
+          }
+        }
+
+        if (state.timerState === 'IDLE') setVisualTheme('IDLE');
       }
 
       function handlePressDown(e) {
@@ -3568,6 +4276,93 @@
         screen.orientation.addEventListener('change', applyOrientation);
       }
 
+      // CubeSense Event Listeners
+      if (dom.btnCubenCam) {
+        dom.btnCubenCam.addEventListener('click', toggleCubeCam);
+      }
+      if (dom.toggleCubecamSettings) {
+        dom.toggleCubecamSettings.addEventListener('click', toggleCubeCam);
+      }
+
+      // HUD Mode Buttons
+      if (dom.btnCubenModeDesk) {
+        dom.btnCubenModeDesk.addEventListener('click', () => cubeCamEngine.setMode('desk'));
+      }
+      if (dom.btnCubenModeCover) {
+        dom.btnCubenModeCover.addEventListener('click', () => cubeCamEngine.setMode('cover'));
+      }
+
+      // Settings Mode Buttons
+      if (dom.btnSettingCamDesk) {
+        dom.btnSettingCamDesk.addEventListener('click', () => {
+          cubeCamEngine.setMode('desk');
+          updateSettingsUI();
+        });
+      }
+      if (dom.btnSettingCamCover) {
+        dom.btnSettingCamCover.addEventListener('click', () => {
+          cubeCamEngine.setMode('cover');
+          updateSettingsUI();
+        });
+      }
+
+      // Settings Sensitivity Buttons
+      if (dom.btnSensLow) {
+        dom.btnSensLow.addEventListener('click', () => cubeCamEngine.setSensitivity('low'));
+      }
+      if (dom.btnSensNormal) {
+        dom.btnSensNormal.addEventListener('click', () => cubeCamEngine.setSensitivity('normal'));
+      }
+      if (dom.btnSensHigh) {
+        dom.btnSensHigh.addEventListener('click', () => cubeCamEngine.setSensitivity('high'));
+      }
+
+      // HUD Action Controls
+      if (dom.btnCubenCalibrate) {
+        dom.btnCubenCalibrate.addEventListener('click', () => cubeCamEngine.calibrateDesk());
+      }
+      if (dom.btnCubenFlip) {
+        dom.btnCubenFlip.addEventListener('click', () => cubeCamEngine.toggleFacingMode());
+      }
+      if (dom.btnCubenClose) {
+        dom.btnCubenClose.addEventListener('click', toggleCubeCam);
+      }
+      if (dom.btnCubenMinimize) {
+        dom.btnCubenMinimize.addEventListener('click', () => {
+          cubeCamEngine.minimized = true;
+          if (dom.cubenHudBody) dom.cubenHudBody.classList.add('hidden');
+          if (dom.cubenMinimizedBar) {
+            dom.cubenMinimizedBar.classList.remove('hidden');
+            dom.cubenMinimizedBar.classList.add('flex');
+          }
+          if (dom.cubenHud) {
+            dom.cubenHud.classList.remove('w-52', 'sm:w-56');
+            dom.cubenHud.classList.add('w-auto');
+          }
+        });
+      }
+      if (dom.btnCubenExpand) {
+        dom.btnCubenExpand.addEventListener('click', () => {
+          cubeCamEngine.minimized = false;
+          if (dom.cubenMinimizedBar) {
+            dom.cubenMinimizedBar.classList.add('hidden');
+            dom.cubenMinimizedBar.classList.remove('flex');
+          }
+          if (dom.cubenHudBody) dom.cubenHudBody.classList.remove('hidden');
+          if (dom.cubenHud) {
+            dom.cubenHud.classList.remove('w-auto');
+            dom.cubenHud.classList.add('w-52', 'sm:w-56');
+          }
+        });
+      }
+
+      // Page Unload cleanup
+      window.addEventListener('beforeunload', () => {
+        if (cubeCamEngine && cubeCamEngine.active) {
+          cubeCamEngine.stopCamera();
+        }
+      });
+
       /* =========================================================================
        * 14. INITIALIZATION
        * ========================================================================= */
@@ -3588,6 +4383,10 @@
         }
 
         updateDashboardStats();
+
+        if (state.settings.cubeCamEnabled) {
+          updateCubeCamUI();
+        }
       }
 
       if (document.readyState === 'loading') {
