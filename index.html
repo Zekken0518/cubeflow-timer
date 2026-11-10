@@ -464,8 +464,51 @@
 
     <!-- Body (Collapsible) -->
     <div id="cuben-hud-body" class="space-y-2">
-      <!-- 1. Ambient Light Sensor Viewport (LuxSense) -->
-      <div id="cuben-lux-box" class="relative rounded-xl overflow-hidden bg-oled-elevated p-2.5 border-2 border-slate-700 transition-all duration-150 space-y-2">
+      <!-- 1. Desk Shockwave / Impact Viewport (ImpactSense — iPhone & Mobile) -->
+      <div id="cuben-impact-box" class="relative rounded-xl overflow-hidden bg-oled-elevated p-2.5 border-2 border-slate-700 transition-all duration-150 space-y-2">
+        <!-- Live Vibration Meter Top -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span id="impact-icon" class="text-base select-none">💥</span>
+            <div class="flex items-baseline gap-1">
+              <span id="impact-val" class="font-mono text-xl font-extrabold text-amber-300">0.0</span>
+              <span class="text-[10px] font-mono text-slate-400">m/s²</span>
+            </div>
+          </div>
+          <span id="impact-state-badge" class="text-[9px] font-bold font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider">
+            Waiting
+          </span>
+        </div>
+
+        <!-- Vibration Waveform Bar -->
+        <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/10 relative">
+          <div id="impact-bar" class="h-full bg-gradient-to-r from-sky-500 via-amber-400 to-rose-500 rounded-full transition-all duration-75" style="width: 5%;"></div>
+          <div id="impact-threshold-marker" class="absolute top-0 bottom-0 w-0.5 bg-white/80" style="left: 35%;" title="Trigger Cutoff"></div>
+        </div>
+
+        <!-- Readout & Guidance -->
+        <div class="flex items-center justify-between text-[9px] font-mono text-slate-400 pt-0.5 border-t border-oled-border/60">
+          <span id="impact-thresh-info">Cutoff: &ge;3.2 m/s²</span>
+          <span class="text-emerald-400 font-semibold">0% Battery</span>
+        </div>
+
+        <!-- iOS Motion Permission Button (shown if needed on iPhone) -->
+        <div id="impact-ios-perm-card" class="hidden text-center pt-0.5">
+          <button id="btn-request-motion-perm" type="button" class="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:opacity-90 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all">
+            <span>⚡ Enable iPhone Motion Access</span>
+          </button>
+          <span class="text-[9px] text-slate-400 block mt-1">Tap once to grant Safari motion permission</span>
+        </div>
+
+        <!-- Interactive Test Impact Button -->
+        <button id="btn-cuben-impact-test" type="button" class="w-full py-1.5 px-2 rounded-lg bg-oled-card hover:bg-slate-800 border border-oled-border text-slate-300 text-[10px] font-mono active:scale-95 transition-all select-none flex items-center justify-center gap-1.5" title="Tap your desk or tap here to test shockwave response">
+          <span>👊</span>
+          <span>Tap Desk or Click to Test</span>
+        </button>
+      </div>
+
+      <!-- 2. Ambient Light Sensor Viewport (LuxSense) -->
+      <div id="cuben-lux-box" class="hidden relative rounded-xl overflow-hidden bg-oled-elevated p-2.5 border-2 border-slate-700 transition-all duration-150 space-y-2">
         <div id="lux-supported-body" class="space-y-2">
           <!-- Live Lux Meter Top -->
           <div class="flex items-center justify-between">
@@ -504,7 +547,7 @@
         <div id="lux-unsupported-card" class="hidden text-center space-y-1.5 py-1">
           <div class="text-amber-400 text-base">⚠️ Sensor API Unavailable</div>
           <p class="text-[10px] text-slate-300 leading-snug">
-            Ambient Light Sensor API is supported on Android Chrome. You can still test with the button below or switch to Camera mode!
+            Ambient Light Sensor API is restricted on iOS Safari. Use ImpactSense (Desk Shockwave) above for the best iPhone experience!
           </p>
           <div class="flex flex-col gap-1 pt-0.5">
             <button id="btn-switch-to-cam" type="button" class="w-full py-1 px-2 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/40 text-[10px] font-semibold transition-all">
@@ -514,7 +557,7 @@
         </div>
       </div>
 
-      <!-- 2. Video Viewport (Camera mode) -->
+      <!-- 3. Video Viewport (Camera mode) -->
       <div id="cuben-preview-box" class="hidden relative rounded-xl overflow-hidden bg-black aspect-[4/3] w-full border-2 border-slate-700 transition-all duration-150">
         <video id="cuben-video" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
         
@@ -541,15 +584,18 @@
         </div>
       </div>
 
-      <!-- Mode Selector Tabs (3 Modes) -->
-      <div class="grid grid-cols-3 gap-1">
-        <button id="btn-cuben-mode-lux" type="button" class="py-1 px-1 rounded-lg text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/40 text-center transition-all truncate" title="Hardware Light Sensor — Zero Camera, Zero Lag, Max Battery Life">
+      <!-- Mode Selector Tabs (4 Modes) -->
+      <div class="grid grid-cols-4 gap-1">
+        <button id="btn-cuben-mode-impact" type="button" class="py-1 px-0.5 rounded-lg text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/40 text-center transition-all truncate" title="Desk Shockwave — Best for iPhone! Drop cube on desk to stop">
+          💥 Impact
+        </button>
+        <button id="btn-cuben-mode-lux" type="button" class="py-1 px-0.5 rounded-lg text-[9px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all truncate" title="Hardware Light Sensor — Android Chrome">
           💡 Light
         </button>
-        <button id="btn-cuben-mode-cover" type="button" class="py-1 px-1 rounded-lg text-[9px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all truncate" title="Phone flat, cover front camera lens">
+        <button id="btn-cuben-mode-cover" type="button" class="py-1 px-0.5 rounded-lg text-[9px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all truncate" title="Phone flat, cover front camera lens">
           📱 Cover
         </button>
-        <button id="btn-cuben-mode-desk" type="button" class="py-1 px-1 rounded-lg text-[9px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all truncate" title="Phone standing, camera watch box">
+        <button id="btn-cuben-mode-desk" type="button" class="py-1 px-0.5 rounded-lg text-[9px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all truncate" title="Phone standing, camera watch box">
           🖥️ Desk
         </button>
       </div>
@@ -1190,10 +1236,14 @@
             <!-- Detection Mode Selector -->
             <div class="pt-2 border-t border-oled-border">
               <label class="block text-[11px] font-semibold text-slate-300 mb-1.5">Detection Engine:</label>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button id="btn-setting-cam-lux" type="button" class="p-2.5 rounded-xl border border-amber-500/50 bg-amber-500/15 text-left active:scale-95 transition-all">
-                  <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">💡 LuxSense (Fastest)</div>
-                  <div class="text-[10px] text-slate-400 mt-0.5 leading-snug">Uses phone's light sensor. Zero camera, 0% battery drain, max FPS.</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button id="btn-setting-cam-impact" type="button" class="p-2.5 rounded-xl border border-amber-500/50 bg-amber-500/15 text-left active:scale-95 transition-all">
+                  <div class="text-xs font-bold text-amber-300 flex items-center gap-1.5">💥 ImpactSense (iPhone)</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 leading-snug">Drop or slam cube on desk near phone to stop instantly. 0% battery drain!</div>
+                </button>
+                <button id="btn-setting-cam-lux" type="button" class="p-2.5 rounded-xl border border-oled-border bg-oled-card text-left active:scale-95 transition-all">
+                  <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">💡 LuxSense (Light Sensor)</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 leading-snug">Uses phone's ambient light sensor (Android Chrome).</div>
                 </button>
                 <button id="btn-setting-cam-cover" type="button" class="p-2.5 rounded-xl border border-oled-border bg-oled-card text-left active:scale-95 transition-all">
                   <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">📱 Cover Lens Cam</div>
@@ -1222,9 +1272,8 @@
             <!-- Visual Guide Box -->
             <div class="p-2.5 rounded-xl bg-oled-card border border-oled-border text-[11px] text-slate-400 space-y-1">
               <span class="text-xs font-semibold text-sky-400 block mb-0.5">How touchless solving works:</span>
-              <p>• <strong>1. Ready:</strong> Place cube over light sensor (or camera zone). Turns green in 0.3s.</p>
-              <p>• <strong>2. Launch:</strong> Pick up cube — timer starts automatically!</p>
-              <p>• <strong>3. Stop:</strong> Drop cube back down over sensor — stops timer instantly!</p>
+              <p>• <strong>ImpactSense (iPhone):</strong> Hold screen to ready &rarr; solve &rarr; drop cube onto desk to stop!</p>
+              <p>• <strong>Lux / Camera:</strong> Cover sensor or camera with cube &rarr; lift to launch &rarr; drop over sensor to stop.</p>
             </div>
           </div>
         </div>
@@ -1525,10 +1574,11 @@
           orientation: 'auto',
           previewMode: '2d',
           cubeCamEnabled: false,
-          cubeCamMode: (typeof window !== 'undefined' && 'AmbientLightSensor' in window) ? 'lux' : 'lux', // 'lux' | 'cover' | 'desk'
+          cubeCamMode: (typeof navigator !== 'undefined' && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))) ? 'impact' : ((typeof window !== 'undefined' && 'AmbientLightSensor' in window) ? 'lux' : 'impact'), // 'impact' | 'lux' | 'cover' | 'desk'
           cubeCamFacing: 'user', // 'user' | 'environment'
           cubeCamSensitivity: 'normal', // 'low' | 'normal' | 'high'
-          luxBaseline: 150
+          luxBaseline: 150,
+          impactThreshold: 3.2
         },
         cubeCamCooldownUntil: 0,
         currentScramble: '',
@@ -1853,7 +1903,7 @@
         btnSplitPhase: document.getElementById('btn-split-phase'),
         cfopCurrentTarget: document.getElementById('cfop-current-target'),
 
-        // CubeSense & LuxSense (Touchless Cube Detection)
+        // Touchless Cube Detection (ImpactSense, LuxSense, CubeCam)
         btnCubenCam: document.getElementById('btn-cuben-cam'),
         cubenCamDot: document.getElementById('cuben-cam-dot'),
         cubenCamLabel: document.getElementById('cuben-cam-label'),
@@ -1861,6 +1911,16 @@
         cubenHudBody: document.getElementById('cuben-hud-body'),
         cubenMinimizedBar: document.getElementById('cuben-minimized-bar'),
         cubenMiniStatus: document.getElementById('cuben-mini-status'),
+        cubenImpactBox: document.getElementById('cuben-impact-box'),
+        impactVal: document.getElementById('impact-val'),
+        impactIcon: document.getElementById('impact-icon'),
+        impactStateBadge: document.getElementById('impact-state-badge'),
+        impactBar: document.getElementById('impact-bar'),
+        impactThresholdMarker: document.getElementById('impact-threshold-marker'),
+        impactThreshInfo: document.getElementById('impact-thresh-info'),
+        impactIosPermCard: document.getElementById('impact-ios-perm-card'),
+        btnRequestMotionPerm: document.getElementById('btn-request-motion-perm'),
+        btnCubenImpactTest: document.getElementById('btn-cuben-impact-test'),
         cubenLuxBox: document.getElementById('cuben-lux-box'),
         luxSupportedBody: document.getElementById('lux-supported-body'),
         luxUnsupportedCard: document.getElementById('lux-unsupported-card'),
@@ -1880,6 +1940,7 @@
         cubenHintPill: document.getElementById('cuben-hint-pill'),
         cubenStatusBadge: document.getElementById('cuben-status-badge'),
         cubenModeTag: document.getElementById('cuben-mode-tag'),
+        btnCubenModeImpact: document.getElementById('btn-cuben-mode-impact'),
         btnCubenModeLux: document.getElementById('btn-cuben-mode-lux'),
         btnCubenModeDesk: document.getElementById('btn-cuben-mode-desk'),
         btnCubenModeCover: document.getElementById('btn-cuben-mode-cover'),
@@ -1890,6 +1951,7 @@
         btnCubenExpand: document.getElementById('btn-cuben-expand'),
         btnCubenClose: document.getElementById('btn-cuben-close'),
         toggleCubecamSettings: document.getElementById('toggle-cubecam-settings'),
+        btnSettingCamImpact: document.getElementById('btn-setting-cam-impact'),
         btnSettingCamLux: document.getElementById('btn-setting-cam-lux'),
         btnSettingCamDesk: document.getElementById('btn-setting-cam-desk'),
         btnSettingCamCover: document.getElementById('btn-setting-cam-cover'),
@@ -2065,8 +2127,13 @@
         setToggle(dom.toggleCfopSplits, state.settings.cfopSplitsEnabled);
         setToggle(dom.toggleCubecamSettings, state.settings.cubeCamEnabled);
 
-        // Touchless mode buttons in settings (LuxSense / Cover / Desk)
-        const curMode = state.settings.cubeCamMode || 'lux';
+        // Touchless mode buttons in settings (ImpactSense / LuxSense / Cover / Desk)
+        const curMode = state.settings.cubeCamMode || 'impact';
+        if (dom.btnSettingCamImpact) {
+          dom.btnSettingCamImpact.className = curMode === 'impact'
+            ? 'p-2.5 rounded-xl border border-amber-500/50 bg-amber-500/20 text-left active:scale-95 transition-all'
+            : 'p-2.5 rounded-xl border border-oled-border bg-oled-card text-left active:scale-95 transition-all';
+        }
         if (dom.btnSettingCamLux) {
           dom.btnSettingCamLux.className = curMode === 'lux'
             ? 'p-2.5 rounded-xl border border-amber-500/50 bg-amber-500/20 text-left active:scale-95 transition-all'
@@ -2302,7 +2369,9 @@
           dom.padLeft.classList.add('border-slate-500');
           dom.padRight.classList.add('border-slate-500');
           if (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) {
-            if (cubeCamEngine.mode === 'lux') {
+            if (cubeCamEngine.mode === 'impact') {
+              dom.statusPill.textContent = state.settings.inspectionEnabled ? 'ImpactSense: Tap to Inspect' : 'ImpactSense: Hold Screen to Ready';
+            } else if (cubeCamEngine.mode === 'lux') {
               dom.statusPill.textContent = state.settings.inspectionEnabled ? 'LuxSense: Lift to Inspect' : 'LuxSense: Cover Light Sensor to Ready';
             } else if (cubeCamEngine.mode === 'cover') {
               dom.statusPill.textContent = state.settings.inspectionEnabled ? 'CubeSense: Lift to Inspect' : 'CubeSense: Cover Camera to Ready';
@@ -2321,7 +2390,7 @@
           dom.padLeft.classList.add('border-amber-500/60');
           dom.padRight.classList.add('border-amber-500/60');
           dom.statusPill.textContent = (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active)
-            ? (cubeCamEngine.mode === 'lux' ? 'LuxSense: Cover Sensor to Ready' : 'CubeSense: Place Cube to Ready')
+            ? (cubeCamEngine.mode === 'impact' ? 'ImpactSense: Hold Screen to Launch' : (cubeCamEngine.mode === 'lux' ? 'LuxSense: Cover Sensor to Ready' : 'CubeSense: Place Cube to Ready'))
             : 'Hold 0.3s to Launch Solve';
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-950/60 border border-amber-500/40 text-amber-300';
         } else if (mode === 'HOLDING') {
@@ -2330,7 +2399,7 @@
           dom.padLeft.classList.add('border-rose-500', 'bg-rose-500/10');
           dom.padRight.classList.add('border-rose-500', 'bg-rose-500/10');
           dom.statusPill.textContent = (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active)
-            ? (cubeCamEngine.mode === 'lux' ? 'LuxSense: Resting... Hold' : 'CubeSense: Resting... Hold')
+            ? (cubeCamEngine.mode === 'impact' ? 'ImpactSense: Readying... Hold' : (cubeCamEngine.mode === 'lux' ? 'LuxSense: Resting... Hold' : 'CubeSense: Resting... Hold'))
             : 'Keep Holding...';
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-rose-950/70 border border-rose-500/50 text-rose-300';
         } else if (mode === 'READY') {
@@ -2339,14 +2408,16 @@
           dom.padLeft.classList.add('border-emerald-400', 'bg-emerald-500/20');
           dom.padRight.classList.add('border-emerald-400', 'bg-emerald-500/20');
           dom.statusPill.textContent = (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active)
-            ? (cubeCamEngine.mode === 'lux' ? 'LuxSense: Lift Cube to Start!' : 'CubeSense: Lift Cube to Start!')
+            ? (cubeCamEngine.mode === 'impact' ? '💥 Release & Solve! Drop to Stop' : (cubeCamEngine.mode === 'lux' ? 'LuxSense: Lift Cube to Start!' : 'CubeSense: Lift Cube to Start!'))
             : 'Release to Start!';
           dom.statusPill.className = 'text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400 text-emerald-300';
         } else if (mode === 'RUNNING') {
           dom.touchZone.classList.add('glow-idle');
           dom.timerMain.classList.add('text-slate-100');
           if (typeof cubeCamEngine !== 'undefined' && cubeCamEngine && cubeCamEngine.active) {
-            if (cubeCamEngine.mode === 'lux') {
+            if (cubeCamEngine.mode === 'impact') {
+              dom.statusPill.textContent = '💥 Drop Cube on Desk to Stop!';
+            } else if (cubeCamEngine.mode === 'lux') {
               dom.statusPill.textContent = 'Cover Sensor with Cube to Stop';
             } else if (cubeCamEngine.mode === 'cover') {
               dom.statusPill.textContent = 'Cover Camera to Stop';
@@ -2662,7 +2733,7 @@
       }
 
       /* =========================================================================
-       * TOUCHLESS ENGINE — LUXSENSE (LIGHT SENSOR) & CUBECAM (OPTICAL)
+       * TOUCHLESS ENGINE — IMPACTSENSE (DESK SHOCKWAVE), LUXSENSE & CUBECAM
        * ========================================================================= */
       class CubeCamEngine {
         constructor() {
@@ -2671,11 +2742,22 @@
           this.stream = null;
           this.animId = null;
           this.lightSensor = null;
+          this.motionHandler = null;
 
-          // Modes: 'lux' (Hardware Light Sensor) | 'cover' (Camera Lens Cover) | 'desk' (Camera Desk Reticle)
-          this.mode = state.settings.cubeCamMode || (('AmbientLightSensor' in window) ? 'lux' : 'cover');
+          // Detect iOS
+          const isIOS = typeof navigator !== 'undefined' && (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+          // Modes: 'impact' (Desk Shockwave) | 'lux' (Hardware Light Sensor) | 'cover' (Camera Lens) | 'desk' (Camera Desk)
+          this.mode = state.settings.cubeCamMode || (isIOS ? 'impact' : (('AmbientLightSensor' in window) ? 'lux' : 'impact'));
           this.facingMode = state.settings.cubeCamFacing || 'user';
           this.sensitivity = state.settings.cubeCamSensitivity || 'normal';
+
+          // Impact / Motion state
+          this.currentImpact = 0;
+          this.lastGx = null;
+          this.lastGy = null;
+          this.lastGz = null;
+          this.motionPermGranted = !isIOS; // Non-iOS doesn't require explicit requestPermission()
 
           // Light Sensor specific state
           this.currentLux = 0;
@@ -2698,7 +2780,9 @@
         }
 
         async start() {
-          if (this.mode === 'lux') {
+          if (this.mode === 'impact') {
+            return await this.startImpactSensor();
+          } else if (this.mode === 'lux') {
             return await this.startLightSensor();
           } else {
             return await this.startCamera();
@@ -2706,6 +2790,7 @@
         }
 
         stop() {
+          this.stopImpactSensor();
           this.stopLightSensor();
           this.stopCamera();
           this.active = false;
@@ -2714,7 +2799,158 @@
           this.consecutiveFalse = 0;
         }
 
+        /* ---------------- IMPACT SENSOR (DESK SHOCKWAVE FOR IPHONE) ---------------- */
+        async startImpactSensor() {
+          this.stopLightSensor();
+          this.stopCamera();
+          this.active = true;
+          this.currentImpact = 0;
+
+          this.updateModeUI();
+          this.updateHudVisuals();
+
+          // Check for iOS Safari permission requirement
+          const needsPermission = typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function';
+          if (needsPermission && !this.motionPermGranted) {
+            if (dom.impactIosPermCard) dom.impactIosPermCard.classList.remove('hidden');
+          } else {
+            if (dom.impactIosPermCard) dom.impactIosPermCard.classList.add('hidden');
+          }
+
+          if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+            this.attachMotionListener();
+            return true;
+          } else {
+            showToast('Device motion sensor not supported on this browser');
+            return true;
+          }
+        }
+
+        async requestMotionPermission() {
+          if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+            try {
+              const res = await DeviceMotionEvent.requestPermission();
+              if (res === 'granted') {
+                this.motionPermGranted = true;
+                if (dom.impactIosPermCard) dom.impactIosPermCard.classList.add('hidden');
+                this.attachMotionListener();
+                showToast('✓ Motion access granted! ImpactSense active');
+                triggerHaptic('tap');
+              } else {
+                showToast('Motion permission was denied');
+              }
+            } catch (err) {
+              console.warn('requestPermission error:', err);
+              showToast('Error requesting motion permission');
+            }
+          }
+        }
+
+        attachMotionListener() {
+          if (this.motionHandler) {
+            window.removeEventListener('devicemotion', this.motionHandler, true);
+          }
+          this.motionHandler = (e) => this.processMotionReading(e);
+          window.addEventListener('devicemotion', this.motionHandler, true);
+        }
+
+        stopImpactSensor() {
+          if (this.motionHandler) {
+            window.removeEventListener('devicemotion', this.motionHandler, true);
+            this.motionHandler = null;
+          }
+        }
+
+        processMotionReading(e) {
+          if (!this.active || this.mode !== 'impact') return;
+          const now = performance.now();
+
+          let acc = 0;
+          if (e.acceleration && (e.acceleration.x !== null || e.acceleration.z !== null)) {
+            const ax = e.acceleration.x || 0;
+            const ay = e.acceleration.y || 0;
+            const az = e.acceleration.z || 0;
+            acc = Math.sqrt(ax * ax + ay * ay + az * az);
+          } else if (e.accelerationIncludingGravity) {
+            const gx = e.accelerationIncludingGravity.x || 0;
+            const gy = e.accelerationIncludingGravity.y || 0;
+            const gz = e.accelerationIncludingGravity.z || 0;
+            if (this.lastGx !== null) {
+              const dx = gx - this.lastGx;
+              const dy = gy - this.lastGy;
+              const dz = gz - this.lastGz;
+              acc = Math.sqrt(dx * dx + dy * dy + dz * dz) * 9.8;
+            }
+            this.lastGx = gx;
+            this.lastGy = gy;
+            this.lastGz = gz;
+          }
+
+          this.currentImpact = acc;
+
+          let thresh = 3.2;
+          if (this.sensitivity === 'low') thresh = 5.2;
+          else if (this.sensitivity === 'high') thresh = 1.8;
+
+          // Check if impact spike exceeds trigger threshold
+          if (acc >= thresh) {
+            this.triggerImpact(acc);
+          } else if (now - this.lastFrameTime >= 40) {
+            this.lastFrameTime = now;
+            this.updateHudVisuals();
+          }
+        }
+
+        triggerImpact(acc) {
+          const now = performance.now();
+          if (state.cubeCamCooldownUntil && now < state.cubeCamCooldownUntil) return;
+
+          this.flashImpactVisuals(acc);
+
+          if (state.timerState === 'RUNNING') {
+            // Cooldown of 500ms from solve start prevents accidental trigger when lifting hands from phone
+            if (now - state.solveStartTime < 500) return;
+            stopSolve();
+            state.timerState = 'STOPPED_HOLD';
+            state.cubeCamCooldownUntil = now + 750;
+            showToast('💥 Desk Impact Stopped Timer!');
+            setTimeout(() => {
+              if (state.timerState === 'STOPPED_HOLD') {
+                state.timerState = 'IDLE';
+                setVisualTheme('IDLE');
+                updateDashboardStats();
+              }
+            }, 750);
+          }
+        }
+
+        flashImpactVisuals(acc) {
+          if (dom.cubenImpactBox) {
+            dom.cubenImpactBox.classList.remove('border-slate-700', 'border-amber-400');
+            dom.cubenImpactBox.classList.add('border-emerald-400', 'shadow-[0_0_15px_rgba(52,211,153,0.6)]');
+            setTimeout(() => {
+              if (dom.cubenImpactBox) {
+                dom.cubenImpactBox.classList.remove('border-emerald-400', 'shadow-[0_0_15px_rgba(52,211,153,0.6)]');
+                dom.cubenImpactBox.classList.add('border-slate-700');
+              }
+            }, 250);
+          }
+          if (dom.impactStateBadge) {
+            dom.impactStateBadge.textContent = `💥 ${acc.toFixed(1)} m/s²!`;
+            dom.impactStateBadge.className = 'text-[9px] font-bold font-mono px-2 py-0.5 rounded-full border uppercase tracking-wider bg-emerald-950/90 text-emerald-300 border-emerald-400';
+          }
+        }
+
+        simulateImpact(val = 5.5) {
+          this.currentImpact = val;
+          this.triggerImpact(val);
+          this.updateHudVisuals();
+          triggerHaptic('tap');
+        }
+
+        /* ---------------- LIGHT SENSOR (LUXSENSE) ---------------- */
         async startLightSensor() {
+          this.stopImpactSensor();
           this.stopCamera();
           this.active = true;
           this.isCubePresent = false;
@@ -2730,7 +2966,6 @@
           this.updateHudVisuals();
 
           if (!hasSensor) {
-            // Keep active in fallback/simulator mode so user can test or calibrate
             return true;
           }
 
@@ -2803,7 +3038,6 @@
           const threshold = Math.max(3, Math.min(this.luxBaseline * ratio, maxAbs));
           const detectedNow = val <= threshold;
 
-          // Debounce: 1 frame when timer is RUNNING for immediate stop reaction!
           const requiredTrue = state.timerState === 'RUNNING' ? 1 : 2;
           const requiredFalse = 2;
 
@@ -2841,7 +3075,9 @@
           }
         }
 
+        /* ---------------- CAMERA ENGINE ---------------- */
         async startCamera() {
+          this.stopImpactSensor();
           this.stopLightSensor();
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             showToast('Camera not supported in this browser');
@@ -2907,14 +3143,14 @@
           this.facingMode = this.facingMode === 'user' ? 'environment' : 'user';
           state.settings.cubeCamFacing = this.facingMode;
           saveStorage();
-          if (this.active && this.mode !== 'lux') {
+          if (this.active && this.mode !== 'lux' && this.mode !== 'impact') {
             await this.startCamera();
           }
           showToast(`Camera switched to ${this.facingMode === 'user' ? 'Front' : 'Rear'}`);
         }
 
         async setMode(newMode) {
-          if (!['lux', 'desk', 'cover'].includes(newMode)) return;
+          if (!['impact', 'lux', 'desk', 'cover'].includes(newMode)) return;
           this.mode = newMode;
           state.settings.cubeCamMode = newMode;
           saveStorage();
@@ -2925,7 +3161,9 @@
           this.consecutiveFalse = 0;
 
           if (this.active) {
-            if (newMode === 'lux') {
+            if (newMode === 'impact') {
+              await this.startImpactSensor();
+            } else if (newMode === 'lux') {
               await this.startLightSensor();
             } else {
               await this.startCamera();
@@ -2937,7 +3175,9 @@
           updateSettingsUI();
           if (state.timerState === 'IDLE') setVisualTheme('IDLE');
 
-          if (newMode === 'lux') {
+          if (newMode === 'impact') {
+            showToast('💥 ImpactSense Active — Drop cube on desk to stop');
+          } else if (newMode === 'lux') {
             showToast('💡 LuxSense Active — Place cube over top sensor');
           } else if (newMode === 'cover') {
             showToast('📱 Cover Cam Active — Place cube over front camera');
@@ -2952,11 +3192,15 @@
           state.settings.cubeCamSensitivity = level;
           saveStorage();
           updateSettingsUI();
+          this.updateHudVisuals();
           showToast(`Sensitivity set to ${level.toUpperCase()}`);
         }
 
         calibrate() {
-          if (this.mode === 'lux') {
+          if (this.mode === 'impact') {
+            showToast('Impact threshold calibrated for desk surface');
+            this.updateHudVisuals();
+          } else if (this.mode === 'lux') {
             this.luxBaseline = Math.max(this.currentLux, 20);
             this.calibrated = true;
             state.settings.luxBaseline = this.luxBaseline;
@@ -3005,42 +3249,51 @@
         }
 
         updateModeUI() {
+          const isImpact = this.mode === 'impact';
           const isLux = this.mode === 'lux';
           const isDesk = this.mode === 'desk';
           const isCover = this.mode === 'cover';
 
+          if (dom.cubenImpactBox) dom.cubenImpactBox.classList.toggle('hidden', !isImpact);
           if (dom.cubenLuxBox) dom.cubenLuxBox.classList.toggle('hidden', !isLux);
-          if (dom.cubenPreviewBox) dom.cubenPreviewBox.classList.toggle('hidden', isLux);
-          if (dom.btnCubenFlip) dom.btnCubenFlip.classList.toggle('hidden', isLux);
+          if (dom.cubenPreviewBox) dom.cubenPreviewBox.classList.toggle('hidden', isImpact || isLux);
+          if (dom.btnCubenFlip) dom.btnCubenFlip.classList.toggle('hidden', isImpact || isLux);
 
           if (dom.cubenModeTag) {
-            dom.cubenModeTag.textContent = isLux ? 'LuxSense' : (isDesk ? 'Desk' : 'Cover');
-            dom.cubenModeTag.className = isLux
-              ? 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30'
-              : 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30';
+            if (isImpact) {
+              dom.cubenModeTag.textContent = 'ImpactSense';
+              dom.cubenModeTag.className = 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            } else if (isLux) {
+              dom.cubenModeTag.textContent = 'LuxSense';
+              dom.cubenModeTag.className = 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30';
+            } else {
+              dom.cubenModeTag.textContent = isDesk ? 'Desk' : 'Cover';
+              dom.cubenModeTag.className = 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30';
+            }
           }
 
           if (dom.cubenReticle) dom.cubenReticle.classList.toggle('hidden', !isDesk);
           if (dom.cubenCoverOverlay) dom.cubenCoverOverlay.classList.toggle('hidden', !isCover);
 
-          const setTabClass = (el, active, isLuxTab = false) => {
+          const setTabClass = (el, active, isHighlight = false) => {
             if (!el) return;
             if (active) {
-              el.className = isLuxTab
-                ? 'py-1 px-1 rounded-lg text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/50 text-center transition-all truncate'
-                : 'py-1 px-1 rounded-lg text-[9px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/50 text-center transition-all truncate';
+              el.className = isHighlight
+                ? 'py-1 px-0.5 rounded-lg text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/50 text-center transition-all truncate'
+                : 'py-1 px-0.5 rounded-lg text-[9px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/50 text-center transition-all truncate';
             } else {
-              el.className = 'py-1 px-1 rounded-lg text-[9px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all truncate';
+              el.className = 'py-1 px-0.5 rounded-lg text-[9px] font-semibold bg-oled-elevated text-slate-400 border border-oled-border text-center transition-all truncate';
             }
           };
 
+          setTabClass(dom.btnCubenModeImpact, isImpact, true);
           setTabClass(dom.btnCubenModeLux, isLux, true);
           setTabClass(dom.btnCubenModeCover, isCover, false);
           setTabClass(dom.btnCubenModeDesk, isDesk, false);
         }
 
         loop() {
-          if (!this.active || this.mode === 'lux') return;
+          if (!this.active || this.mode === 'impact' || this.mode === 'lux') return;
           const now = performance.now();
           this.processFrame(now);
           this.animId = requestAnimationFrame(() => this.loop());
@@ -3145,7 +3398,43 @@
           const tState = state.timerState;
           const isPresent = this.isCubePresent;
 
-          // 1. LuxSense Mode HUD rendering
+          // 1. ImpactSense Mode HUD rendering
+          if (this.mode === 'impact') {
+            const acc = this.currentImpact;
+            let thresh = 3.2;
+            if (this.sensitivity === 'low') thresh = 5.2;
+            else if (this.sensitivity === 'high') thresh = 1.8;
+
+            const pct = Math.min(100, Math.max(5, (acc / (thresh * 2)) * 100));
+
+            if (dom.impactVal) dom.impactVal.textContent = acc.toFixed(1);
+            if (dom.impactBar) dom.impactBar.style.width = `${pct}%`;
+            if (dom.impactThreshInfo) dom.impactThreshInfo.textContent = `Cutoff: ≥${thresh.toFixed(1)} m/s²`;
+            if (dom.impactThresholdMarker) dom.impactThresholdMarker.style.left = '50%';
+
+            let badgeText = 'ARMED';
+            let badgeStyle = 'bg-slate-800 text-slate-300 border-slate-700';
+
+            if (tState === 'RUNNING') {
+              badgeText = '💥 DROP ON DESK TO STOP';
+              badgeStyle = 'bg-amber-950/80 text-amber-300 border-amber-500/50 animate-pulse';
+            } else if (tState === 'READY') {
+              badgeText = '🟢 READY! LIFT TO START';
+              badgeStyle = 'bg-emerald-950/80 text-emerald-300 border-emerald-400';
+            } else if (tState === 'HOLDING') {
+              badgeText = '🔴 HOLDING...';
+              badgeStyle = 'bg-rose-950/80 text-rose-300 border-rose-500/60';
+            }
+
+            if (dom.impactStateBadge) {
+              dom.impactStateBadge.textContent = badgeText;
+              dom.impactStateBadge.className = `text-[9px] font-bold font-mono px-2 py-0.5 rounded-full border uppercase tracking-wider ${badgeStyle}`;
+            }
+            if (dom.cubenMiniStatus) dom.cubenMiniStatus.textContent = `Impact: ${acc.toFixed(1)} m/s² (${badgeText})`;
+            return;
+          }
+
+          // 2. LuxSense Mode HUD rendering
           if (this.mode === 'lux') {
             const lux = this.currentLux;
             const base = Math.max(this.luxBaseline, 10);
@@ -3197,7 +3486,7 @@
             return;
           }
 
-          // 2. Camera Viewport HUD rendering
+          // 3. Camera Viewport HUD rendering
           if (dom.cubenPreviewBox) {
             dom.cubenPreviewBox.classList.remove(
               'border-slate-700', 'border-rose-500', 'border-emerald-400', 'border-sky-400',
@@ -3333,14 +3622,17 @@
           updateCubeCamUI();
           showToast('Touchless Detection Deactivated');
         } else {
+          const isImpact = cubeCamEngine.mode === 'impact';
           const isLux = cubeCamEngine.mode === 'lux';
-          showToast(isLux ? 'Starting LuxSense (Light Sensor)...' : 'Starting camera...');
+          showToast(isImpact ? 'Starting ImpactSense (Desk Shockwave)...' : (isLux ? 'Starting LuxSense...' : 'Starting camera...'));
           const ok = await cubeCamEngine.start();
           if (ok) {
             state.settings.cubeCamEnabled = true;
             saveStorage();
             updateCubeCamUI();
-            if (isLux) {
+            if (isImpact) {
+              showToast('💥 ImpactSense Active — Drop cube on desk to stop!');
+            } else if (isLux) {
               showToast('💡 LuxSense Active — Cover top sensor with cube');
             } else {
               showToast('CubeCam Active — Place cube to ready');
@@ -3367,7 +3659,9 @@
         }
 
         if (dom.cubenCamLabel && cubeCamEngine) {
-          if (cubeCamEngine.mode === 'lux') {
+          if (cubeCamEngine.mode === 'impact') {
+            dom.cubenCamLabel.textContent = 'ImpactSense';
+          } else if (cubeCamEngine.mode === 'lux') {
             dom.cubenCamLabel.textContent = 'LuxSense';
           } else {
             dom.cubenCamLabel.textContent = 'CubeCam';
@@ -4649,6 +4943,9 @@
       }
 
       // Touchless HUD Mode Buttons
+      if (dom.btnCubenModeImpact) {
+        dom.btnCubenModeImpact.addEventListener('click', () => cubeCamEngine.setMode('impact'));
+      }
       if (dom.btnCubenModeLux) {
         dom.btnCubenModeLux.addEventListener('click', () => cubeCamEngine.setMode('lux'));
       }
@@ -4660,6 +4957,12 @@
       }
 
       // Settings Mode Buttons
+      if (dom.btnSettingCamImpact) {
+        dom.btnSettingCamImpact.addEventListener('click', () => {
+          cubeCamEngine.setMode('impact');
+          updateSettingsUI();
+        });
+      }
       if (dom.btnSettingCamLux) {
         dom.btnSettingCamLux.addEventListener('click', () => {
           cubeCamEngine.setMode('lux');
@@ -4676,6 +4979,20 @@
         dom.btnSettingCamDesk.addEventListener('click', () => {
           cubeCamEngine.setMode('desk');
           updateSettingsUI();
+        });
+      }
+
+      // iOS Motion Permission button
+      if (dom.btnRequestMotionPerm) {
+        dom.btnRequestMotionPerm.addEventListener('click', () => {
+          cubeCamEngine.requestMotionPermission();
+        });
+      }
+
+      // Test Impact button
+      if (dom.btnCubenImpactTest) {
+        dom.btnCubenImpactTest.addEventListener('click', () => {
+          cubeCamEngine.simulateImpact(6.0);
         });
       }
 
