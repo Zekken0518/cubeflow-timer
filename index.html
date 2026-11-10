@@ -15,36 +15,11 @@
 
   <title>CubeFlow — 3x3 WCA Speedcubing Timer</title>
 
-  <!-- Fonts: Inter for UI, JetBrains Mono for zero-jitter tabular digits -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
-          },
-          colors: {
-            oled: {
-              bg: '#050507',
-              card: '#0d0e14',
-              elevated: '#151722',
-              border: '#222638'
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
+  <!-- Bundled styles and fonts are available without a network connection. -->
+  <link rel="stylesheet" href="./assets/fonts/fonts.css">
+  <link rel="stylesheet" href="./assets/app.css">
+  <script defer src="./assets/offline.js"></script>
+<style>
     /* iOS Touch & Selection Preventions */
     * {
       -webkit-touch-callout: none;
@@ -1044,6 +1019,7 @@
           </div>
           <div>
             <h2 class="text-base font-bold text-white">Timer Settings & Tools</h2>
+            <p id="offline-status" role="status" class="text-[11px] text-slate-400">Preparing offline access…</p>
             <p class="text-xs text-slate-400">Audio, haptics, CFOP splits & data backups</p>
           </div>
         </div>
